@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+
+  bandit-nbs:
+    image: bandit-nbs
+    build:
+      context: ..
+      dockerfile: src/Bandit.NBS.Daemon/Dockerfile
+    ports:
+      - 6002:6002
+    environment:
+      NBS__NpgsqlDatabase__DatabaseName: "bandit-nbs"
+      NBS__NpgsqlDatabase__ConnectionString: "User ID=bandit;Password=orF9YuPWVajej5tC6cfiro94BoxrzsoE;Host=postgres;Port=5432;Database=bandit-nbs;Connection Lifetime=0;"
+      NBS__MgdbDatabase__DatabaseName: "bandit-nbs"
+      NBS__MgdbDatabase__ConnectionString: "mongodb://bandit:KQVYJnxcMXvQ5joLef524V97zRkMMT3N@mongo:27017"
+      NBS__SSL__ServerCertificate: "tristesse.pfx"
+      NBS__TCP__Port: 6002
+      Logging__LogLevel__Default: "Debug"
+    depends_on:
+      - postgres
+      - mongo
+    volumes:
+      - ../certs/:/certs/
+    networks:
+      - banknet
+      - internal
+
+  postgres:
+    image: postgres:15.2-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=bandit 
+      - POSTGRES_PASSWORD=orF9YuPWVajej5tC6cfiro94BoxrzsoE
+    ports:
+      - '5433:5432'
+    networks:
+      - internal
+  
+  mongo:
+    image: mongo:6.0.5
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=bandit
+      - MONGO_INITDB_ROOT_PASSWORD=KQVYJnxcMXvQ5joLef524V97zRkMMT3N
+    ports:
+      - '27018:27017'
+    networks:
+      - internal
+
+networks: 
+  banknet: 
+    name: bandit-banknet
+    external: true
+  internal:
+    name: nbs-internal
+
